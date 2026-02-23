@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI 多模型网站</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: Arial; padding: 20px; background: #0f172a; color: white; }
+input, textarea, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: none; }
+button { background: #3b82f6; color: white; font-weight: bold; }
+.chat-box { background: #1e293b; padding: 15px; border-radius: 10px; height: 300px; overflow: auto; margin-bottom: 10px; }
+.user { color: #38bdf8; } 
+.ai { color: #a3e635; }
+img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<h2>AI 多模型网站</h2>
+
+<select id="model">
+  <option value="gpt-3.5-turbo">GPT-3.5</option>
+  <option value="gpt-4">GPT-4</option>
+</select>
+
+<div class="chat-box" id="chat"></div>
+
+<textarea id="message" placeholder="输入你的消息"></textarea>
+<button onclick="sendMessage()">发送</button>
+
+<hr>
+
+<h3>生成角色图片</h3>
+<input type="text" id="imagePrompt" placeholder="描述角色">
+<button onclick="generateImage()">生成图片</button>
+<div id="imageResult"></div>
+
+<script>
+async function sendMessage(){
+    const msg = document.getElementById("message").value;
+    const model = document.getElementById("model").value;
+    const chatBox = document.getElementById("chat");
+    if(!msg) return;
+    chatBox.innerHTML += `<div class="user">你: ${msg}</div>`;
+    
+    const form = new FormData();
+    form.append("model", model);
+    form.append("message", msg);
+    
+    const res = await fetch("/chat", { method:"POST", body: form });
+    const data = await res.json();
+    chatBox.innerHTML += `<div class="ai">AI: ${data.reply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    document.getElementById("message").value = "";
+}
+
+async function generateImage(){
+    const prompt = document.getElementById("imagePrompt").value;
+    if(!prompt) return;
+    const form = new FormData();
+    form.append("prompt", prompt);
+    
+    const res = await fetch("/image", { method:"POST", body: form });
+    const data = await res.json();
+    
+    const container = document.getElementById("imageResult");
+    if(data.url){
+        container.innerHTML = `<img src="${data.url}">`;
+    } else {
+        container.innerHTML = `<p>生成失败: ${data.error}</p>`;
+    }
+}
+</script>
+
+</body>
+</html>
